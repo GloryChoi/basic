@@ -1,0 +1,11 @@
+### GLOBAL ###
+/target/
+/.settings/
+
+### IDE-ECLIPSE ###
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.idea

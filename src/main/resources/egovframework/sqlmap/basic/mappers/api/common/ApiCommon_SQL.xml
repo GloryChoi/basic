@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.basic.api.common.service.impl.ApiCommonMapper">
+
+	<select id="selectRpTbCodeDataList" parameterType="paramMap" resultType="egovMap">
+	    /* Query ID=BoardMapper.selectRpTbCodeDataList */
+	    SELECT
+			CD_CODE_VAL AS CODE_CD
+			,NM_CODE AS CODE_NM
+		FROM RP_TB_CODE_DATA
+		WHERE 1=1
+			AND CD_ACTIVE = '1'
+			AND ID_CODE = #{idCode}
+			<if test=" cdCodeVal != '' and cdCodeVal != null ">
+			AND CD_CODE_VAL LIKE '%' + #{cdCodeVal} + '%'
+			</if>
+		ORDER BY NO_ORDER
+	</select>
+
+</mapper>

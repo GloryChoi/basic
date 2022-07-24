@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.basic.api.test.service.impl.ApiTestMapper">
+
+	<select id="selectList" parameterType="paramMap" resultType="egovMap">
+/* Query ID=ApiTestMapper.selectList */
+	    SELECT
+	    	SYSTEM_CD
+			,ID_VR
+			,IP_ADDRESS
+			,CD_STATUS
+			,ID_ADMIN
+		FROM RP_TB_ACCESS_SVR_IP
+		WHERE 1=1
+			AND CD_STATUS = #{cdStatus}
+			AND IP_ADDRESS = #{ipAddress}
+			AND SYSTEM_CD = #{systemCd}
+			AND ID_VR = #{idVr}
+</select>
+
+</mapper>

@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.basic.api.member.service.impl.MemberMapper">
+
+	<select id="selectRpTbPayAgreeList" parameterType="paramMap" resultType="egovMap">
+	    /* Query ID=MemberMapper.selectRpTbPayAgreeList */
+	    SELECT
+			Z.AGREE_NO
+			,Z.AGREE_VER_NO
+			,Z.AGREE_NM
+			,Z.AGREE_KIND_CD
+			,Z.AGREE_YN_CD
+			,C.AGREE_TXT
+			,C.START_DT
+		FROM(
+			SELECT
+				A.AGREE_NO
+				,MAX(B.AGREE_VER_NO) AS AGREE_VER_NO
+				,A.AGREE_NM
+				,A.AGREE_KIND_CD
+				,A.AGREE_YN_CD
+			FROM RP_TB_PAY_AGREE A
+			LEFT JOIN RP_TB_PAY_AGREE_VER B
+			ON A.AGREE_NO = B.AGREE_NO
+			WHERE 1=1
+				AND A.AGREE_STATUS_CD = 'A'
+				AND A.AGREE_LOC_CD = #{agreeLocCd}
+				<![CDATA[
+				AND B.START_DT <= dbo.RP_FN_GET_DATE_TO_FORMAT(GETDATE(),'yyyymmdd')
+				]]>
+				GROUP BY A.AGREE_NO, A.AGREE_NM, A.AGREE_KIND_CD, A.AGREE_YN_CD
+		)Z
+		LEFT OUTER JOIN RP_TB_PAY_AGREE_VER C
+		ON Z.AGREE_NO = C.AGREE_NO
+		AND Z.AGREE_VER_NO = C.AGREE_VER_NO
+	</select>
+
+	<select id="selectRpTbUser" parameterType="paramMap" resultType="egovMap">
+	    /* Query ID=MemberMapper.selectRpTbUser */
+	    SELECT
+	    	USER_NO
+			,USER_ID
+			,USER_CI
+			,ENC_USER_NM
+			,ISNULL(ENC_PASSWD, '') AS ENC_PASSWD
+			,ISNULL(ENC_BF_PASSWD, '') AS ENC_BF_PASSWD
+			,dbo.RP_FN_GET_DATE_TO_FORMAT(CHG_PASSWD_DATE,'yyyymmddhhmiss') AS CHG_PASSWD_DATE
+			,ISNULL(PASSWD_ERR_CNT, 0) AS PASSWD_ERR_CNT
+			,PCASH_PASSWD_YN
+			,ISNULL(ENC_PCASH_PASSWD, '') AS ENC_PCASH_PASSWD
+			,ISNULL(ENC_BF_PCASH_PASSWD, '') AS ENC_BF_PCASH_PASSWD
+			,CHG_APP_PASSWD_DATE
+			,ISNULL(APP_PASSWD_ERR_CNT, 0) AS APP_PASSWD_ERR_CNT
+			,FINGER_YN
+			,CHG_FIGER_DATE
+			,BIRTH_DT
+			,SEX_CD
+			,DOMESTIC_YN
+			,ENC_EMAIL
+			,JOIN_METHOD_CD
+			,JOIN_METHOD_DET
+			,JOIN_SNS_KEY
+			,dbo.RP_FN_GET_DATE_TO_FORMAT(JOIN_DATE,'yyyymmddhhmiss') AS JOIN_DATE
+			,USER_MOBILE_CD
+			,ENC_USER_MOBILE
+			,USER_STATUS_CD
+			,WITHDRAW_CD
+			,WITHDRAW_DET
+			,WITHDRAW_DATE
+			,LAST_LOGIN_DATE
+			,dbo.RP_FN_GET_DATE_TO_FORMAT(PAY_JOIN_DATE,'yyyymmddhhmiss') AS PAY_JOIN_DATE
+			,PAY_STATUS_CD
+			,PAY_USERKEY
+			,ISNULL(BPAPER_AUTO_YN, '') AS BPAPER_AUTO_YN
+			,ISNULL(BPAPER_TYPE, '') AS BPAPER_TYPE
+			,ISNULL(BPAPER_NO_TYPE, '') AS BPAPER_NO_TYPE
+			,ISNULL(ENC_BPAPER_NO, '') AS ENC_BPAPER_NO
+			,BPAPER_CHG_DATE
+			,REG_DATE
+			,CHG_DATE
+			,CASE
+				WHEN (SELECT DISTINCT B.PAY_STATUS_CD FROM RP_TB_USER_PAY B WHERE B.VR_PAYMENT_TYPE = 'PA' AND B.PAY_STATUS_CD = 'A' AND B.USER_NO = A.USER_NO ) = 'A' THEN 'Y'
+				ELSE 'N'
+			END AS PCASH_JOIN_YN
+			,CASE
+				WHEN PAY_STATUS_CD = '0' THEN 'Y'
+				ELSE 'N'
+			END AS PAY_JOIN_YN
+			,(SELECT B.ENC_PAY_TOKEN FROM RP_TB_USER_PAY B WHERE B.VR_PAYMENT_TYPE = 'PA' AND B.PAY_STATUS_CD = 'A' AND B.USER_NO = A.USER_NO AND B.PAY_GUBUN = '910102') AS PCASH_CARD_NO
+			,PASS_NOTI_YN
+			,LOGIN_NOTI_YN
+			,SVC_NOTI_YN
+			,(SELECT MOBILE_UUID FROM RP_TB_USER_DEVICE B WHERE B.STATUS_CD = 'A' AND B.USER_NO = A.USER_NO) AS MOBILE_UUID
+		FROM RP_TB_USER A
+		WHERE 1=1
+			<choose>
+				<when test=' userStatusCd == "0" '>
+				AND (USER_STATUS_CD = '8' OR USER_STATUS_CD = #{userStatusCd})
+				</when>
+				<when test=' userStatusCd != "0" '>
+				AND USER_STATUS_CD = #{userStatusCd}
+				</when>
+			</choose>
+			<if test=" userNo != '' and userNo != null ">
+			AND USER_NO = #{userNo}
+			</if>
+			<if test=" userId != '' and userId != null ">
+			AND USER_ID = #{userId}
+			</if>
+			<if test=" userCi != '' and userCi != null ">
+			AND USER_CI = #{userCi}
+			</if>
+			<if test=" userPasswd != '' and userPasswd != null ">
+				<choose>
+					<when test=" jobCd == '' or jobCd == null ">
+	                AND ENC_PASSWD = #{userPasswd}
+	                </when>
+	                <when test=" jobCd == 1 ">
+	                AND ENC_PASSWD = #{userPasswd}
+	                </when>
+	                <when test=" jobCd == 2 ">
+					AND ENC_PCASH_PASSWD = #{userPasswd}
+	                </when>
+	            </choose>
+            </if>
+            <if test=" payStatusCd != '' and payStatusCd != null ">
+			AND PAY_STATUS_CD = #{payStatusCd}
+			</if>
+			<if test=" payStatusCd != '' and payStatusCd != null ">
+			AND PAY_USERKEY = #{payUserkey}
+			</if>
+			<if test=" encUserNm != '' and encUserNm != null ">
+			AND ENC_USER_NM = #{encUserNm}
+			</if>
+			<if test=" encEmail != '' and encEmail != null ">
+			AND ENC_EMAIL = #{encEmail}
+			</if>
+	</select>
+
+	<insert id="insertRpTbUser" parameterType="paramMap">
+		/* Query ID=MemberMapper.insertRpTbUser */
+		INSERT INTO RP_TB_USER
+			(
+				USER_NO
+				,USER_ID
+				,USER_CI
+				,ENC_USER_NM
+				,ENC_PASSWD
+				,CHG_PASSWD_DATE
+				,PASSWD_ERR_CNT
+				,PCASH_PASSWD_YN
+				,FINGER_YN
+				,BIRTH_DT
+				,SEX_CD
+				,DOMESTIC_YN
+				,ENC_EMAIL
+				,JOIN_METHOD_CD
+				,JOIN_METHOD_DET
+				,JOIN_DATE
+				,USER_MOBILE_CD
+				,ENC_USER_MOBILE
+				,USER_STATUS_CD
+				,REG_DATE
+				,CHG_DATE
+				,PASS_NOTI_YN
+				,PASS_NOTI_DATE
+				,LOGIN_NOTI_YN
+				,LOGIN_NOTI_DATE
+				,SVC_NOTI_YN
+				,SVC_NOTI_DATE
+			)
+		VALUES
+			(
+				#{userNo}
+				,#{userId}
+				,#{userCi}
+				,#{encUserNm}
+				,#{encPasswd}
+				,GETDATE()
+				,0
+				,'N'
+				,'N'
+				,#{birthDt}
+				,#{sexCd}
+				,#{domesticYn}
+				,#{encEmail}
+				,#{joinMethodCd}
+				,#{joinMethodDet}
+				,GETDATE()
+				,#{userMobileCd}
+				,#{encUserMobile}
+				,#{userStatusCd}
+				,GETDATE()
+				,GETDATE()
+				,'Y'
+				,GETDATE()
+				,'Y'
+				,GETDATE()
+				,'Y'
+				,GETDATE()
+			)
+	</insert>
+
+	<insert id="insertRpTbUserDevice" parameterType="paramMap">
+		/* Query ID=MemberMapper.insertRpTbUserDevice */
+		INSERT INTO RP_TB_USER_DEVICE
+			(
+				USER_NO
+				,MOBILE_UUID
+				,STATUS_CD
+				,MOBILE_OS_CD
+				,REG_DATE
+				,CHG_DATE
+			)
+		VALUES
+			(
+				#{userNo}
+				,#{mobileUuid}
+				,#{statusCd}
+				,#{mobileOsCd}
+				,GETDATE()
+				,GETDATE()
+			)
+	</insert>
+
+	<insert id="insertRpTbUserAgree" parameterType="paramMap">
+		/* Query ID=MemberMapper.insertRpTbUserAgree */
+		INSERT INTO RP_TB_USER_AGREE
+			(
+				USER_NO
+				,AGREE_VER_NO
+				,AGREE_NO
+				,AGREE_YN
+				,REG_DATE
+			)
+		VALUES
+			(
+				#{userNo}
+				,#{agreeVerNo}
+				,#{agreeNo}
+				,#{agreeYn}
+				,GETDATE()
+			)
+	</insert>
+
+	<update id="updateRpTbUserPasswdErrCnt" parameterType="paramMap">
+		/* Query ID=MemberMapper.updateRpTbUserPasswdErrCnt */
+		UPDATE RP_TB_USER
+		<choose>
+            <when test=" jobCd == 1 and passwdErrCnt == 0 ">
+            SET PASSWD_ERR_CNT = #{passwdErrCnt}
+            , CHG_PASSWD_DATE = GETDATE()
+            </when>
+            <when test=" jobCd == 1 and passwdErrCnt == 1 ">
+            SET PASSWD_ERR_CNT = PASSWD_ERR_CNT + #{passwdErrCnt}
+            , CHG_PASSWD_DATE = GETDATE()
+            </when>
+            <when test=" jobCd == 2 and passwdErrCnt == 0 ">
+			SET APP_PASSWD_ERR_CNT = #{passwdErrCnt}
+			, CHG_APP_PASSWD_DATE = GETDATE()
+            </when>
+            <when test=" jobCd == 2 and passwdErrCnt == 1 ">
+			SET APP_PASSWD_ERR_CNT = APP_PASSWD_ERR_CNT + #{passwdErrCnt}
+			, CHG_APP_PASSWD_DATE = GETDATE()
+            </when>
+        </choose>
+        WHERE 1=1
+        	<if test=" userNo != '' and userNo != null ">
+			AND USER_NO = #{userNo}
+			</if>
+			<if test=" userId != '' and userId != null ">
+			AND USER_ID = #{userId}
+			</if>
+	</update>
+
+	<update id="updateRpTbUserPasswd" parameterType="paramMap">
+		/* Query ID=MemberMapper.updateRpTbUserPasswd */
+		UPDATE RP_TB_USER
+		<choose>
+            <when test=" jobCd == 1 ">
+            SET ENC_BF_PASSWD = ENC_PASSWD
+            , ENC_PASSWD = #{userPasswd}
+            , CHG_PASSWD_DATE = GETDATE()
+            , PASSWD_ERR_CNT = 0
+            , USER_STATUS_CD = '0'
+            </when>
+            <when test=" jobCd == 2 ">
+			SET ENC_BF_PCASH_PASSWD = ENC_PCASH_PASSWD
+			, ENC_PCASH_PASSWD = #{userPasswd}
+			, PCASH_PASSWD_YN = 'Y'
+			, APP_PASSWD_ERR_CNT = 0
+			, CHG_APP_PASSWD_DATE = GETDATE()
+            </when>
+            <when test=" jobCd == 3 ">
+           	<choose>
+	            <when test=' userStatusCd == 8 '>
+	            SET ENC_PASSWD = #{userPasswd}
+	            </when>
+	            <otherwise>
+	            SET ENC_BF_PASSWD = ENC_PASSWD
+	       		, ENC_PASSWD = #{userPasswd}
+	            </otherwise>
+           	</choose>
+            , CHG_PASSWD_DATE = GETDATE()
+            , PASSWD_ERR_CNT = 0
+            , USER_STATUS_CD = '8'
+            </when>
+        </choose>
+        WHERE 1=1
+        	AND USER_NO = #{userNo}
+	</update>
+
+	<update id="updateRpTbUserInfo" parameterType="paramMap">
+		/* Query ID=MemberMapper.updateRpTbUserInfo */
+		UPDATE RP_TB_USER
+		<choose>
+            <when test=" jobCd == 1 ">
+            SET USER_MOBILE_CD = #{userMobileCd}
+            , ENC_USER_MOBILE = #{userMobile}
+            , CHG_DATE = GETDATE()
+            </when>
+            <when test=" jobCd == 2 ">
+			SET ENC_EMAIL = #{email}
+			, CHG_DATE = GETDATE()
+            </when>
+            <when test=" jobCd == 3 ">
+			SET BPAPER_AUTO_YN = #{cashReceiptYn}
+			, CHG_DATE = GETDATE()
+			<choose>
+				<when test=' cashReceiptYn == "Y" '>
+				, BPAPER_TYPE = #{cashReceiptCd}
+				, BPAPER_NO_TYPE = #{cashReceiptNoCd}
+				, ENC_BPAPER_NO = #{cashReceiptNo}
+				</when>
+				<otherwise>
+				, BPAPER_TYPE = ''
+				, BPAPER_NO_TYPE = ''
+				, ENC_BPAPER_NO = ''
+				</otherwise>
+			</choose>
+            </when>
+        </choose>
+        WHERE 1=1
+        	AND USER_NO = #{userNo}
+	</update>
+
+	<update id="updateRpTbUserDevice" parameterType="paramMap">
+		/* Query ID=MemberMapper.updateRpTbUserDevice */
+		UPDATE RP_TB_USER_DEVICE
+        SET MOBILE_UUID = #{mobileUuid}
+        , MOBILE_OS_CD = #{mobileOsCd}
+        , STATUS_CD = #{statusCd}
+        , CHG_DATE = GETDATE()
+        WHERE 1=1
+        	AND USER_NO = #{userNo}
+	</update>
+
+	<update id="updateRpTbUserWithdraw" parameterType="paramMap">
+		/* Query ID=MemberMapper.updateRpTbUserWithdraw */
+		UPDATE RP_TB_USER
+		SET USER_STATUS_CD = '9'
+		, USER_ID = #{userId}
+		, USER_CI = #{userCi}
+		, ENC_USER_NM = #{encUserNm}
+		, ENC_EMAIL = #{encEmail}
+		, ENC_USER_MOBILE = #{encUserMobile}
+		, ENC_BPAPER_NO = #{encBpaperNo}
+		, WITHDRAW_CD = #{withdrawCd}
+		, WITHDRAW_DET = #{withdrawDet}
+		, WITHDRAW_DATE = GETDATE()
+		, CHG_DATE = GETDATE()
+        WHERE 1=1
+        	AND USER_NO = #{userNo}
+	</update>
+
+	<delete id="deleteRpTbUserDevice" parameterType="paramMap">
+		/* Query ID=MemberMapper.deleteRpTbUserDevice */
+		DELETE FROM RP_TB_USER_DEVICE
+        WHERE 1=1
+        	AND USER_NO = #{userNo}
+	</delete>
+
+	<select id="selectRpTbUserIdList" parameterType="paramMap" resultType="egovMap">
+	    /* Query ID=MemberMapper.selectRpTbUserIdList */
+	    SELECT
+			USER_ID
+		FROM RP_TB_USER
+		WHERE 1=1
+			AND USER_STATUS_CD = #{userStatusCd}
+			<if test=" encUserNm != '' and encUserNm != null ">
+			AND ENC_USER_NM = #{encUserNm}
+			</if>
+			<if test=" encEmail != '' and encEmail != null ">
+			AND ENC_EMAIL = #{encEmail}
+			</if>
+			<if test=" userId != '' and userId != null ">
+			AND USER_ID = #{userId}
+			</if>
+	</select>
+
+	<update id="updateRpTbUserNotiYn" parameterType="paramMap">
+		/* Query ID=MemberMapper.updateRpTbUserNotiYn */
+		UPDATE RP_TB_USER
+		<if test=" passNotiYn != '' and passNotiYn != null ">
+        SET PASS_NOTI_YN = #{passNotiYn}
+        , PASS_NOTI_DATE = GETDATE()
+        </if>
+        <if test=" loginNotiYn != '' and loginNotiYn != null ">
+        SET LOGIN_NOTI_YN = #{loginNotiYn}
+        , LOGIN_NOTI_DATE = GETDATE()
+        </if>
+        <if test=" svcNotiYn != '' and svcNotiYn != null ">
+        SET SVC_NOTI_YN = #{svcNotiYn}
+        , SVC_NOTI_DATE = GETDATE()
+        </if>
+        WHERE 1=1
+        	AND USER_NO = #{userNo}
+	</update>
+
+	<select id="selectRpTbUserToken" parameterType="paramMap" resultType="egovMap">
+	    /* Query ID=MemberMapper.selectRpTbUserToken */
+	    SELECT TOP 1
+			USER_TOKEN
+			,USER_NO
+			,TOKEN_STATUS_CD
+			,DEVICE_TYPE_CD
+			,IP_ADDR
+			,MOBILE_UUID
+			,dbo.RP_FN_GET_DATE_TO_FORMAT(EXPIRE_DATE,'yyyymmddhhmiss') AS EXPIRE_DATE
+			,CHG_DATE
+			,REG_DATE
+		FROM RP_TB_USER_TOKEN
+		WHERE 1=1
+			AND USER_NO = #{userNo}
+			AND TOKEN_STATUS_CD = #{tokenStatusCd}
+			<if test=" userToken != '' and userToken != null ">
+			AND USER_TOKEN = #{userToken}
+			</if>
+			<if test=" deviceTypeCd != '' and deviceTypeCd != null ">
+			AND DEVICE_TYPE_CD = #{deviceTypeCd}
+			</if>
+			<if test=" ipAddr != '' and ipAddr != null ">
+			AND IP_ADDR = #{ipAddr}
+			</if>
+			<if test=" mobileUuid != '' and mobileUuid != null ">
+			AND MOBILE_UUID = #{mobileUuid}
+			</if>
+		ORDER BY REG_DATE DESC
+	</select>
+
+	<insert id="insertRpTbUserToken" parameterType="paramMap">
+		/* Query ID=MemberMapper.insertRpTbUserToken */
+		INSERT INTO RP_TB_USER_TOKEN
+			(
+				USER_TOKEN
+				,USER_NO
+				,TOKEN_STATUS_CD
+				,DEVICE_TYPE_CD
+				,IP_ADDR
+				,MOBILE_UUID
+				,EXPIRE_DATE
+				,CHG_DATE
+				,REG_DATE
+			)
+		VALUES
+			(
+				#{userToken}
+				,#{userNo}
+				,#{tokenStatusCd}
+				,#{deviceTypeCd}
+				,#{ipAddr}
+				,#{mobileUuid}
+				<choose>
+					<when test=' expireDate != "" and expireDate != null '>
+					,dbo.RP_FN_GET_DatetimeFromChar(#{expireDate})
+					</when>
+					<otherwise>
+					,DATEADD(MI, 10, GETDATE())
+					</otherwise>
+				</choose>
+				,GETDATE()
+				,GETDATE()
+			)
+	</insert>
+
+	<update id="updateRpTbUserToken" parameterType="paramMap">
+		/* Query ID=MemberMapper.updateRpTbUserToken */
+		UPDATE RP_TB_USER_TOKEN
+		SET TOKEN_STATUS_CD = #{tokenStatusCd}
+		<if test=' tokenStatusCd == "A" '>
+		, EXPIRE_DATE = DATEADD(MI, 10, GETDATE())
+		</if>
+		, CHG_DATE = GETDATE()
+        WHERE 1=1
+        	AND USER_NO = #{userNo}
+			AND USER_TOKEN = #{userToken}
+	</update>
+
+	<update id="updateRpTbUserTokenDup" parameterType="paramMap">
+		/* Query ID=MemberMapper.updateRpTbUserTokenDup */
+		UPDATE RP_TB_USER_TOKEN
+		SET TOKEN_STATUS_CD = 'D'
+		, CHG_DATE = GETDATE()
+        WHERE 1=1
+        	AND USER_NO = #{userNo}
+			AND USER_TOKEN != #{userToken}
+			AND TOKEN_STATUS_CD = 'A'
+	</update>
+</mapper>

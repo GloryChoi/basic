@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+
+	<bean name="propertiesService" class="org.egovframe.rte.fdl.property.impl.EgovPropertyServiceImpl" destroy-method="destroy">
+		<property name="properties">
+	        <map>
+	        	<entry key="pageUnit" value="10"/>
+	        	<entry key="pageSize" value="10"/>
+	        </map>
+		</property>
+	</bean>
+
+	<beans profile="default">
+		<bean name="propertiesService" class="org.egovframe.rte.fdl.property.impl.EgovPropertyServiceImpl" destroy-method="destroy">
+			<property name="properties">
+		        <map>
+		        </map>
+			</property>
+		</bean>
+
+        <bean id="environmentVariablesConfiguration" class="org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig">
+            <property name="algorithm" value="PBEWITHMD5ANDDES"/>
+            <property name="passwordEnvName" value="APP_ENCRYPTION_PASSWORD"/>
+            <property name="password" value="cyk"/>
+        </bean>
+        <bean id="configurationEncryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor">
+            <property name="config" ref="environmentVariablesConfiguration"/>
+        </bean>
+
+        <bean id="propertyConfig" class="org.jasypt.spring31.properties.EncryptablePropertyPlaceholderConfigurer">
+            <constructor-arg ref="configurationEncryptor"/>
+            <property name="location" value="classpath:default/database.properties"/>
+        </bean>
+    </beans>
+
+    <beans profile="dev">
+		<bean name="propertiesService" class="org.egovframe.rte.fdl.property.impl.EgovPropertyServiceImpl" destroy-method="destroy">
+			<property name="properties">
+		        <map>
+		        </map>
+			</property>
+		</bean>
+
+        <bean id="environmentVariablesConfiguration" class="org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig">
+            <property name="algorithm" value="PBEWITHMD5ANDDES"/>
+            <property name="passwordEnvName" value="APP_ENCRYPTION_PASSWORD"/>
+            <property name="password" value="cyk"/>
+        </bean>
+        <bean id="configurationEncryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor">
+            <property name="config" ref="environmentVariablesConfiguration"/>
+        </bean>
+
+        <bean id="propertyConfig" class="org.jasypt.spring31.properties.EncryptablePropertyPlaceholderConfigurer">
+            <constructor-arg ref="configurationEncryptor"/>
+            <property name="location" value="classpath:dev/database.properties"/>
+        </bean>
+    </beans>
+
+     <beans profile="stage">
+		<bean name="propertiesService" class="org.egovframe.rte.fdl.property.impl.EgovPropertyServiceImpl" destroy-method="destroy">
+			<property name="properties">
+		        <map>
+		        </map>
+			</property>
+		</bean>
+
+        <bean id="environmentVariablesConfiguration" class="org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig">
+            <property name="algorithm" value="PBEWITHMD5ANDDES"/>
+            <property name="passwordEnvName" value="APP_ENCRYPTION_PASSWORD"/>
+            <property name="password" value="cyk"/>
+        </bean>
+        <bean id="configurationEncryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor">
+            <property name="config" ref="environmentVariablesConfiguration"/>
+        </bean>
+
+        <bean id="propertyConfig" class="org.jasypt.spring31.properties.EncryptablePropertyPlaceholderConfigurer">
+            <constructor-arg ref="configurationEncryptor"/>
+            <property name="location" value="classpath:stage/database.properties"/>
+        </bean>
+    </beans>
+
+	<beans profile="prd">
+		<bean name="propertiesService" class="org.egovframe.rte.fdl.property.impl.EgovPropertyServiceImpl" destroy-method="destroy">
+			<property name="properties">
+		        <map>
+		        </map>
+			</property>
+		</bean>
+
+        <bean id="environmentVariablesConfiguration" class="org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig">
+            <property name="algorithm" value="PBEWITHMD5ANDDES"/>
+            <property name="passwordEnvName" value="APP_ENCRYPTION_PASSWORD"/>
+            <property name="password" value="cyk"/>
+        </bean>
+        <bean id="configurationEncryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor">
+            <property name="config" ref="environmentVariablesConfiguration"/>
+        </bean>
+
+        <bean id="propertyConfig" class="org.jasypt.spring31.properties.EncryptablePropertyPlaceholderConfigurer">
+            <constructor-arg ref="configurationEncryptor"/>
+            <property name="location" value="classpath:prd/database.properties"/>
+        </bean>
+    </beans>
+
+</beans>

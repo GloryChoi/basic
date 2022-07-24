@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.basic.api.board.service.impl.BoardMapper">
+
+	<select id="selectRpTbBoardList" parameterType="paramMap" resultType="egovMap">
+	    /* Query ID=BoardMapper.selectRpTbBoardList */
+	    SELECT
+			TOTAL_CNT
+			,SEQ_NO
+			,REG_DATE
+			,BOARD_TITLE
+			,BOARD_CONTENT
+			,BOARD_KIND
+			,BOARD_KIND_NM
+			,ANSWER_YN
+			,ANSWER_CONTENT
+			,ANSWER_REG_DATE
+			,DATE_APPLY_YN
+			,START_DT
+			,END_DT
+			,BANNER_FILE_NM
+			,DET_FILE_NM
+		FROM(
+			SELECT
+				ROW_NUMBER() OVER(ORDER BY SEQ_NO DESC) AS ROWNUM
+				,COUNT(*) OVER () AS TOTAL_CNT
+				,SEQ_NO
+				,BOARD_GUBUN
+				,BOARD_KIND
+				,dbo.RP_FN_GET_CODE_NM('U3010', BOARD_KIND) AS BOARD_KIND_NM
+				,USER_NO
+				,ENC_REG_NM
+				,ENC_REG_EMAIL
+				,ENC_REG_TEL_NO
+				,ENC_PASSWD
+				,BOARD_TITLE
+				,BOARD_CONTENT
+				,STATUS_CD
+				,ISNULL(ANSWER_YN, 'N') AS ANSWER_YN
+				,ISNULL(ANSWER_CONTENT, '') AS ANSWER_CONTENT
+				,dbo.RP_FN_GET_DATE_TO_FORMAT(ANSWER_REG_DATE, 'yyyymmddhhmiss') AS ANSWER_REG_DATE
+				,ADMIN_ID
+				,dbo.RP_FN_GET_DATE_TO_FORMAT(REG_DATE, 'yyyymmddhhmiss') AS REG_DATE
+				,CHG_DATE
+				,DATE_APPLY_YN
+				,START_DT
+				,END_DT
+				,BANNER_FILE_NM
+				,DET_FILE_NM
+			FROM RP_TB_BOARD
+			WHERE STATUS_CD = 'A'
+				AND BOARD_GUBUN = #{boardGubun}
+				<if test=' boardKind != "ALL" '>
+				AND BOARD_KIND = #{boardKind}
+				</if>
+				<if test=" startDt != '' and startDt != null and endDt != '' and endDt != null">
+				AND CONVERT(INT, CONVERT(CHAR(8), REG_DATE, 112)) BETWEEN #{startDt} AND #{endDt}
+				</if>
+				<if test=" userNo != '' and userNo != null ">
+				AND USER_NO = #{userNo}
+				</if>
+				<if test=" answerYn != '' and answerYn != null ">
+				AND ANSWER_YN = #{answerYn}
+				</if>
+				<if test=' dateApplyYn == "N" '>
+				AND DATE_APPLY_YN = 'N'
+				</if>
+				<if test=' dateApplyYn == "Y" '>
+				AND DATE_APPLY_YN = 'Y'
+				AND CONVERT(INT, CONVERT(CHAR(8), GETDATE(), 112)) BETWEEN START_DT AND END_DT
+				</if>
+				<if test=" searchTerm != '' and searchTerm != null ">
+				AND (BOARD_TITLE LIKE '%' + #{searchTerm} + '%' OR BOARD_CONTENT LIKE '%' + #{searchTerm} + '%')
+				</if>
+		) Z
+		WHERE 1=1
+			AND ROWNUM BETWEEN ( ( CAST(#{pageNo} AS INT) - 1) * CAST(#{pageListCnt} AS INT) ) + 1 AND ( CAST(#{pageNo} AS INT) * CAST(#{pageListCnt} AS INT) )
+	</select>
+
+	<select id="selectRpTbBoardDetail" parameterType="paramMap" resultType="egovMap">
+	    /* Query ID=BoardMapper.selectRpTbBoardDetail */
+	    SELECT
+			dbo.RP_FN_GET_DATE_TO_FORMAT(REG_DATE, 'yyyymmddhhmiss') AS REG_DATE
+			,BOARD_TITLE
+			,BOARD_CONTENT
+			,BOARD_KIND
+			,dbo.RP_FN_GET_CODE_NM('U3010', BOARD_KIND) AS BOARD_KIND_NM
+			,ISNULL(ANSWER_YN, 'N') AS ANSWER_YN
+			,ISNULL(ANSWER_CONTENT, '') AS ANSWER_CONTENT
+			,dbo.RP_FN_GET_DATE_TO_FORMAT(ANSWER_REG_DATE, 'yyyymmddhhmiss') AS ANSWER_REG_DATE
+			,ENC_REG_NM AS REG_NM
+			,ENC_REG_EMAIL AS REG_EMAIL
+			,ENC_REG_TEL_NO AS REG_TEL_NO
+			,BANNER_FILE_NM
+			,DET_FILE_NM
+		FROM RP_TB_BOARD
+		WHERE STATUS_CD = 'A'
+			AND SEQ_NO = #{seqNo}
+	</select>
+
+	<insert id="insertRpTbBoard" parameterType="paramMap">
+		/* Query ID=BoardMapper.insertRpTbBoard */
+		INSERT INTO RP_TB_BOARD
+			(
+				BOARD_GUBUN
+				,BOARD_KIND
+				,REG_DATE
+				,BOARD_TITLE
+				,BOARD_CONTENT
+				,USER_NO
+				,ENC_REG_NM
+				,ENC_REG_EMAIL
+				,ENC_REG_TEL_NO
+				,ENC_PASSWD
+				,STATUS_CD
+				,CHG_DATE
+				,ANSWER_YN
+			)
+		VALUES
+			(
+				#{boardGubun}
+				,#{boardKind}
+				,GETDATE()
+				,#{boardTitle}
+				,#{boardContent}
+				,#{userNo}
+				,#{encRegNm}
+				,#{encRegEmail}
+				,#{encRegTelNo}
+				,#{encPasswd}
+				,'A'
+				,GETDATE()
+				,'N'
+			)
+	</insert>
+
+</mapper>
